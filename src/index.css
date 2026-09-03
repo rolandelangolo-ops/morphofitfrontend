@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+@import 'tailwindcss';
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+  --font-display: var(--font-serif);
+  --font-body: var(--font-sans);
+  --font-mono: var(--font-mono-face);
+}
+
+:root {
+  --background: #0A0908;
+  --foreground: #F0EAE0;
+  --card: #131110;
+  --card-foreground: #F0EAE0;
+  --primary: #C9A96E;
+  --primary-foreground: #0A0908;
+  --secondary: #1C1916;
+  --secondary-foreground: #C4BAB0;
+  --muted: #1C1916;
+  --muted-foreground: #7A7168;
+  --accent: #C9A96E;
+  --accent-foreground: #0A0908;
+  --border: rgba(201, 169, 110, 0.15);
+  --ring: #C9A96E;
+  --radius: 3px;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Outfit', system-ui, sans-serif;
+  --font-mono-face: 'DM Mono', 'Courier New', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+:hover::-webkit-scrollbar-thumb {
+  opacity: 1;
+}
+
+::selection {
+  background: rgba(201, 169, 110, 0.3);
+  color: var(--foreground);
+}

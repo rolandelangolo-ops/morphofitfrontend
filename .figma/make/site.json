@@ -1,0 +1,10 @@
+{
+  "description": "Transform your custom clothing experience with precise body scanning, tailored style recommendations, and seamless collaboration with stylists and tailors.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
