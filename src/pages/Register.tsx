@@ -1,182 +1,286 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router";
-import { useAuth } from "../AuthContext";
+﻿import { useState } from 'react'
+import { Link, useNavigate } from 'react-router'
+import { useAuth } from '../AuthContext'
+import { PillButton } from '../components/ui/primitives'
+import { Input } from '../components/ui/Input'
+import { AppIcon, type IconName } from '../components/ui/icons'
 
-const ROLES = [
-  { value: "client", label: "Client", description: "Get measured and commission garments" },
-  { value: "stylist", label: "Stylist", description: "Propose designs for clients" },
-  { value: "tailor", label: "Tailor", description: "Produce garments and quote prices" },
-  { value: "delivery_agent", label: "Delivery Agent", description: "Pick up and deliver finished orders" },
-];
+const ROLES: {
+  value: string
+  label: string
+  description: string
+  icon: IconName
+}[] = [
+  {
+    value: 'client',
+    label: 'Client',
+    description: 'Get measured and commission bespoke garments',
+    icon: 'user',
+  },
+  {
+    value: 'stylist',
+    label: 'Stylist',
+    description: 'Provide morphology analysis & style briefs',
+    icon: 'sparkles',
+  },
+  {
+    value: 'tailor',
+    label: 'Tailor',
+    description: 'Cut, draft patterns, and produce garments',
+    icon: 'scissors',
+  },
+  {
+    value: 'delivery_agent',
+    label: 'Courier',
+    description: 'Pick up and deliver finished atelier orders',
+    icon: 'truck',
+  },
+]
 
 export default function Register() {
-  const { register } = useAuth();
-  const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("client");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { register } = useAuth()
+  const navigate = useNavigate()
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [role, setRole] = useState('client')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const passwordStrength =
+    password.length === 0
+      ? 0
+      : password.length < 6
+      ? 1
+      : password.length < 10
+      ? 2
+      : 3
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    if (password.length < 6) { setError("Password must be at least 6 characters"); return; }
-    setLoading(true);
-    try {
-      await register(name, email, password, role);
-      navigate("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Registration failed");
-    } finally {
-      setLoading(false);
+    e.preventDefault()
+    setError('')
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long')
+      return
     }
-  };
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
+    setLoading(true)
+    try {
+      await register(name, email, password, role)
+      navigate('/dashboard')
+    } catch (err: any) {
+      setError(err.message || 'Registration failed')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <div
-      className="min-h-screen flex"
-      style={{ background: "var(--background)", fontFamily: "var(--font-sans)" }}
-    >
-      {/* Left panel */}
-      <div className="hidden lg:block flex-1 relative overflow-hidden">
+    <div className="flex min-h-screen bg-cream font-body text-ink">
+      {/* ── Left panel — Editorial Photography ─────────────────────────── */}
+      <div className="relative hidden flex-1 overflow-hidden lg:block">
         <img
           src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=900&h=1200&fit=crop&auto=format"
-          alt="Fashion atelier"
-          className="w-full h-full"
-          style={{ objectFit: "cover", filter: "brightness(0.3) sepia(0.2)" }}
+          alt="Artisanal tailor atelier"
+          className="h-full w-full object-cover saturate-90"
         />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to right, transparent 60%, var(--background))" }} />
-        <div className="absolute bottom-16 left-12">
-          <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.8rem", fontWeight: 400, color: "var(--foreground)", lineHeight: 1.2, maxWidth: "320px" }}>
-            Join a platform where
-            <br />
-            <em style={{ fontStyle: "italic", color: "var(--primary)" }}>craft meets precision.</em>
-          </div>
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(to right, rgba(10,9,8,0.2) 0%, transparent 40%, var(--color-cream) 98%)',
+          }}
+        />
+        <div className="absolute bottom-16 left-12 right-12">
+          <h2 className="max-w-md text-4xl font-bold font-display text-white leading-tight drop-shadow-md">
+            Join a platform where{' '}
+            <em className="italic text-forest-light">craft meets precision.</em>
+          </h2>
+          <p className="mt-4 text-xs font-data uppercase tracking-[0.3em] text-white/80">
+            MorphoFit Haute Couture Network
+          </p>
         </div>
       </div>
 
-      {/* Right panel */}
-      <div className="flex-1 flex flex-col items-center justify-center px-8 py-16 w-full">
-        <div className="w-full max-w-sm">
-          <Link
-            to="/"
-            style={{ fontFamily: "var(--font-serif)", fontSize: "1.3rem", color: "var(--primary)", letterSpacing: "0.04em", textDecoration: "none", display: "block", marginBottom: "3rem" }}
-          >
-            MorphoFit
+      {/* ── Right panel — Registration Form ─────────────────────────────── */}
+      <div className="mx-auto flex w-full flex-1 flex-col items-center justify-center px-6 py-12 sm:px-10 lg:max-w-2xl">
+        <div className="w-full max-w-sm sm:max-w-md">
+          {/* Logo */}
+          <Link to="/" className="mb-6 inline-flex items-center gap-3 group">
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-2xl shadow-md ring-2 ring-forest/20 group-hover:scale-105 transition-transform"
+              style={{ background: 'var(--gradient-primary)' }}
+            >
+              <span className="text-xl font-bold font-display text-white">M</span>
+            </div>
+            <span className="text-xl font-bold font-display text-ink tracking-tight">
+              MorphoFit
+            </span>
           </Link>
 
-          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", fontWeight: 400, marginBottom: "0.5rem" }}>
+          <h1 className="text-3xl font-bold font-display text-ink tracking-tight">
             Create account
           </h1>
-          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginBottom: "2.5rem" }}>
-            Join MorphoFit as a client, stylist, tailor, or delivery agent.
+          <p className="mt-1.5 mb-6 text-sm font-body text-ink-muted">
+            Select your discipline to join the bespoke platform.
           </p>
 
-          {/* Role selector */}
-          <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ fontFamily: "var(--font-mono-face)", fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--muted-foreground)", display: "block", marginBottom: "0.75rem" }}>
-              I am a…
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {ROLES.map((r) => (
-                <button
-                  key={r.value}
-                  type="button"
-                  onClick={() => setRole(r.value)}
-                  style={{
-                    padding: "0.75rem",
-                    border: `1px solid ${role === r.value ? "var(--primary)" : "var(--border)"}`,
-                    background: role === r.value ? "rgba(201,169,110,0.08)" : "var(--card)",
-                    borderRadius: "2px",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  <div style={{ fontSize: "0.82rem", fontWeight: 500, color: role === r.value ? "var(--primary)" : "var(--foreground)", marginBottom: "0.2rem" }}>
-                    {r.label}
-                  </div>
-                  <div style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", lineHeight: 1.3 }}>
-                    {r.description}
-                  </div>
-                </button>
-              ))}
+          {/* Role selector cards */}
+          <div className="mb-6">
+            <span className="mb-2 block text-[10px] font-data font-semibold uppercase tracking-widest text-ink-subtle">
+              Select Your Role
+            </span>
+            <div className="grid grid-cols-2 gap-2.5">
+              {ROLES.map((r) => {
+                const isActive = role === r.value
+                return (
+                  <button
+                    key={r.value}
+                    type="button"
+                    onClick={() => setRole(r.value)}
+                    className={`flex flex-col items-start rounded-2xl border p-3.5 text-left transition-all ${
+                      isActive
+                        ? 'border-forest bg-forest/10 ring-1 ring-forest text-forest shadow-xs'
+                        : 'border-parchment-dark bg-surface text-ink-muted hover:border-forest/40 hover:text-ink'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span
+                        className={`flex h-6 w-6 items-center justify-center rounded-lg ${
+                          isActive
+                            ? 'bg-forest text-white'
+                            : 'bg-parchment text-ink-subtle'
+                        }`}
+                      >
+                        <AppIcon name={r.icon} size={13} />
+                      </span>
+                      <span className="text-sm font-semibold font-body text-ink">
+                        {r.label}
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-body text-ink-subtle leading-tight line-clamp-2">
+                      {r.description}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {[
-              { label: "Full Name", value: name, onChange: setName, type: "text", placeholder: "Sophie Martin" },
-              { label: "Email", value: email, onChange: setEmail, type: "email", placeholder: "you@example.com" },
-              { label: "Password", value: password, onChange: setPassword, type: "password", placeholder: "Min. 6 characters" },
-            ].map((field) => (
-              <div key={field.label}>
-                <label style={{ fontFamily: "var(--font-mono-face)", fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--muted-foreground)", display: "block", marginBottom: "0.5rem" }}>
-                  {field.label}
-                </label>
-                <input
-                  type={field.type}
-                  value={field.value}
-                  onChange={(e) => field.onChange(e.target.value)}
-                  required
-                  placeholder={field.placeholder}
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem 1rem",
-                    background: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "2px",
-                    color: "var(--foreground)",
-                    fontSize: "0.875rem",
-                    fontFamily: "var(--font-sans)",
-                    outline: "none",
-                    transition: "border-color 0.15s",
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = "var(--primary)")}
-                  onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
-                />
-              </div>
-            ))}
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              label="Full name"
+              value={name}
+              onChange={setName}
+              required
+              autoComplete="name"
+              icon="user"
+              placeholder="e.g. Samuel Eto'o"
+            />
+
+            <Input
+              label="Email address"
+              type="email"
+              value={email}
+              onChange={setEmail}
+              required
+              autoComplete="email"
+              icon="mail"
+              placeholder="you@atelier.com"
+            />
+
+            <div className="space-y-1.5">
+              <Input
+                label="Password"
+                type="password"
+                value={password}
+                onChange={setPassword}
+                required
+                autoComplete="new-password"
+                icon="shieldCheck"
+                placeholder="Min. 6 characters"
+              />
+
+              {password.length > 0 && (
+                <div className="flex items-center gap-1.5 px-1">
+                  <div
+                    className={`h-1 flex-1 rounded-full transition-colors ${
+                      passwordStrength >= 1 ? 'bg-amber' : 'bg-parchment-dark'
+                    }`}
+                  />
+                  <div
+                    className={`h-1 flex-1 rounded-full transition-colors ${
+                      passwordStrength >= 2 ? 'bg-forest' : 'bg-parchment-dark'
+                    }`}
+                  />
+                  <div
+                    className={`h-1 flex-1 rounded-full transition-colors ${
+                      passwordStrength >= 3 ? 'bg-emerald-500' : 'bg-parchment-dark'
+                    }`}
+                  />
+                  <span className="text-[10px] font-data text-ink-subtle ml-1">
+                    {passwordStrength === 1
+                      ? 'Weak'
+                      : passwordStrength === 2
+                      ? 'Medium'
+                      : 'Strong'}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <Input
+              label="Confirm password"
+              type="password"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              required
+              autoComplete="new-password"
+              icon="shieldCheck"
+              placeholder="Repeat your password"
+              error={
+                confirmPassword && password !== confirmPassword
+                  ? 'Passwords do not match'
+                  : undefined
+              }
+            />
 
             {error && (
-              <div style={{ padding: "0.75rem 1rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "2px", fontSize: "0.8rem", color: "#f87171" }}>
+              <div className="rounded-xl border border-seal/20 bg-[var(--status-error-bg)] p-3 text-xs font-body text-[var(--status-error-text)] animate-shake">
                 {error}
               </div>
             )}
 
-            <button
+            <PillButton
               type="submit"
-              disabled={loading}
-              style={{
-                padding: "0.875rem",
-                background: loading ? "var(--muted)" : "var(--primary)",
-                color: "var(--primary-foreground)",
-                border: "none",
-                borderRadius: "2px",
-                fontSize: "0.8rem",
-                fontFamily: "var(--font-sans)",
-                fontWeight: 500,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                cursor: loading ? "not-allowed" : "pointer",
-                transition: "opacity 0.2s",
-                marginTop: "0.5rem",
-              }}
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={loading}
             >
-              {loading ? "Creating account…" : "Create Account"}
-            </button>
+              {loading ? 'Creating account…' : 'Create Account'}
+            </PillButton>
           </form>
 
-          <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: "2rem", textAlign: "center" }}>
-            Already have an account?{" "}
-            <Link to="/signin" style={{ color: "var(--primary)", textDecoration: "none" }}>
+          <p className="mt-8 text-center text-xs sm:text-sm font-body text-ink-muted">
+            Already have an atelier account?{' '}
+            <Link
+              to="/signin"
+              className="font-semibold text-forest hover:underline"
+            >
               Sign in
             </Link>
           </p>
         </div>
       </div>
     </div>
-  );
+  )
 }

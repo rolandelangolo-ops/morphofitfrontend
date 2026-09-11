@@ -1,84 +1,415 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap');
 @import 'tailwindcss';
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-border: var(--border);
-  --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 2px);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 4px);
-  --font-display: var(--font-serif);
-  --font-body: var(--font-sans);
-  --font-mono: var(--font-mono-face);
+/* ═══════════════════════════════════════════════════════════════════════════
+   MorphoFit — Obsidian & Gold Design System
+   Fraunces (display serif) · Inter (body sans) · JetBrains Mono (data mono)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Fraunces', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  /* ── Brand palette (light defaults) ─────────────────────────────────── */
+  /* Contrast audit (light vs dark) — every accent/text token below is
+     tuned PER ROLE, not just per theme, because two roles pull in
+     opposite directions on the same hue:
+       (a) small accent TEXT sitting directly on the page (labels,
+           prices, active-nav) needs to contrast against light-mode's
+           cream/parchment surfaces vs dark-mode's near-black ones —
+           opposite requirements, hence forest/amber/nav-active/ink-subtle
+           all get distinct light vs dark values below.
+       (b) solid FILL + white text (PillButton primary, UserAvatar,
+           StepIndicator/VerticalSteps "done" nodes) needs the fill dark
+           enough for white to read on top of it — in BOTH themes, since
+           the fill color itself doesn't flip. The original #C9A96E gold
+           measured ~2.3:1 for white-on-fill in either theme (WCAG AA
+           needs 4.5:1) — that's why buttons/avatars looked washed out
+           even before the light-mode-specific bug below.
+     forest/amber here are darkened enough to clear ~4.5:1+ for BOTH
+     roles at once in light mode; dark mode's block re-tunes them
+     separately since it has far more headroom against near-black.
+     ink-muted/ink-subtle went through two passes: the first only
+     targeted the bare ~4.5:1 AA floor (#7A7168 / #7C7265), which
+     turned out to still read as washed-out in practice — small
+     10-11px uppercase JetBrains Mono captions (thin strokes, wide
+     tracking) look noticeably softer than the same color on body
+     text at the same contrast ratio, so "legally passes" wasn't
+     "comfortable to read". These values instead target ~6.5-7.5:1
+     (AAA range) against --color-surface, with ink-subtle kept a hair
+     lighter than --color-ink-muted so the ink > muted > subtle
+     prominence order still holds. */
+  --color-forest: #8F6E33;
+  --color-forest-light: #B2924F;
+  --color-forest-dark: #6B5124;
+  --color-amber: #96702E;
+  --color-amber-light: #D4AC72;
+  --color-parchment: #F0EAE0;
+  --color-parchment-dark: #E4DACB;
+  --color-ink: #1C1916;
+  --color-ink-muted: #5C5348;
+  --color-ink-subtle: #655C4F;
+  --color-cream: #FBF8F3;
+  --color-seal: #B23A2E;
+  --color-nav-active: #8F6E33;
+
+  /* These three MUST live inside @theme, not a plain :root block — Tailwind
+     v4 only generates color utilities (bg-surface, text-surface,
+     border-surface, ring-surface/40, etc.) for --color-* custom properties
+     declared here. They used to sit in the :root block below, which made
+     every `bg-surface` in the app (Card, Modal, TopBar, ConversationList,
+     avatars…) compile to a no-op class with an entirely transparent
+     background — confirmed live: `getComputedStyle(el).backgroundColor`
+     on a `bg-surface` element returned `rgba(0,0,0,0)` despite
+     `--color-surface` resolving correctly as a CSS variable. That's what
+     made modals unreadable: with no opaque backdrop, the full page behind
+     a modal showed straight through it, double-exposing that page's text
+     under the modal's own — not a contrast problem, a missing background
+     entirely. Dark mode still overrides these three the normal way, in
+     the [data-theme='dark'] block — only the *initial* declaration needs
+     to be inside @theme for Tailwind to register the utility. */
+  --color-surface: #FFFCF7;
+  --color-steel: #1E3A5F;
+  --color-moss: #2D4A2D;
 }
 
+/* ── Extended light-mode tokens ───────────────────────────────────────────── */
 :root {
-  --background: #0A0908;
-  --foreground: #F0EAE0;
-  --card: #131110;
-  --card-foreground: #F0EAE0;
-  --primary: #C9A96E;
-  --primary-foreground: #0A0908;
-  --secondary: #1C1916;
-  --secondary-foreground: #C4BAB0;
-  --muted: #1C1916;
-  --muted-foreground: #7A7168;
-  --accent: #C9A96E;
-  --accent-foreground: #0A0908;
-  --border: rgba(201, 169, 110, 0.15);
-  --ring: #C9A96E;
-  --radius: 3px;
-  --font-serif: 'Playfair Display', Georgia, serif;
-  --font-sans: 'Outfit', system-ui, sans-serif;
-  --font-mono-face: 'DM Mono', 'Courier New', monospace;
+  /* Glassmorphism */
+  --surface-glass-bg: rgba(255, 252, 247, 0.8);
+  --surface-glass-border: rgba(255, 252, 247, 0.6);
+  --nav-glass-bg: rgba(251, 248, 243, 0.85);
+  --nav-glass-border: rgba(28, 25, 22, 0.08);
+  --border-bright: rgba(143, 110, 51, 0.35);
+  --glow-primary: rgba(143, 110, 51, 0.28);
+  color-scheme: light;
+
+  /* Shadows */
+  --shadow-tint: 28, 25, 22;
+  --glow-primary-rgb: 143, 110, 51;
+  --glow-amber-rgb: 150, 112, 46;
+  --shadow-sm: 0 2px 8px rgba(var(--shadow-tint), 0.06);
+  --shadow-md: 0 8px 24px rgba(var(--shadow-tint), 0.08);
+  --shadow-lg: 0 20px 60px rgba(var(--shadow-tint), 0.10);
+  --shadow-xl: 0 30px 90px rgba(var(--shadow-tint), 0.14);
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, var(--color-forest) 0%, var(--color-forest-light) 100%);
+  --gradient-surface: linear-gradient(135deg, var(--color-cream) 0%, var(--color-parchment) 100%);
+  --gradient-amber: linear-gradient(135deg, var(--color-amber) 0%, var(--color-amber-light) 100%);
+  --gradient-mesh: radial-gradient(circle at 15% 20%, rgba(var(--glow-primary-rgb), 0.10), transparent 55%),
+                   radial-gradient(circle at 85% 75%, rgba(var(--glow-amber-rgb), 0.10), transparent 55%);
+
+  /* Status tones */
+  --status-success-bg: #D1FAE5; --status-success-text: #065F46;
+  --status-warning-bg: #FEF3C7; --status-warning-text: #92400E;
+  --status-error-bg:   #FEE2E2; --status-error-text:   #991B1B;
+  --status-info-bg:    #E0F2FE; --status-info-text:    #0369A1;
+  --status-neutral-bg: #F3F4F6; --status-neutral-text: #6B7280;
+
+  /* Input tokens */
+  --input-bg: var(--color-surface);
+  --input-border: var(--color-parchment-dark);
+  --input-border-focus: var(--color-forest);
+  --input-ring: rgba(143, 110, 51, 0.25);
 }
+
+/* ── Dark mode ────────────────────────────────────────────────────────────── */
+[data-theme='dark'] {
+  /* forest/amber are darkened from the original #C9A96E/#B8863E — those
+     read beautifully as small accent text against near-black (~8:1) but
+     failed white-on-fill contrast on PillButton/UserAvatar/StepIndicator
+     (~2.3:1, needs 4.5:1) since the fill color doesn't care which theme
+     it's in. #9A7936/#96702E keep ~4-4.6:1 for white text on the fill
+     AND ~4.6-5.9:1 as standalone text against this theme's near-black
+     surfaces — both roles pass now, at the cost of the accent reading as
+     slightly less blazing-bright than before (still clearly "gold", not
+     brown). forest-light reuses the original #C9A96E as a genuinely
+     bright variant for gradients/hover glows, where there's no white
+     text sitting on top to worry about. ink-subtle was the one dark-mode
+     value that actually failed outright: #7A7168 measured ~3.7:1 against
+     --color-surface, short of AA. #948A7D (first pass) only cleared the
+     ~4.5:1 floor, which — same lesson as light mode's ink-muted/subtle —
+     still read soft on small mono captions; #A89C8A clears ~6.6:1 while
+     staying dimmer than --color-ink-muted (#C4BAB0, ~9.3:1), preserving
+     the ink > muted > subtle order. --color-surface is lifted a notch off
+     --color-parchment (previously identical at #131110) so cards read as
+     a distinct, slightly raised layer instead of flattening into their
+     own section backgrounds. */
+  --color-forest: #9A7936;
+  --color-forest-light: #C9A96E;
+  --color-forest-dark: #6B5124;
+  --color-amber: #96702E;
+  --color-amber-light: #D4AC72;
+  --color-parchment: #131110;
+  --color-parchment-dark: #0A0908;
+  --color-ink: #F0EAE0;
+  --color-ink-muted: #C4BAB0;
+  --color-ink-subtle: #A89C8A;
+  --color-cream: #0A0908;
+  --color-seal: #C94430;
+  --color-surface: #1A1816;
+  --color-nav-active: #C9A96E;
+  --color-steel: #3F6EA8;
+  --color-moss: #4A7A4A;
+  --surface-glass-bg: rgba(26, 24, 22, 0.78);
+  --surface-glass-border: rgba(240, 234, 224, 0.08);
+  --nav-glass-bg: rgba(10, 9, 8, 0.72);
+  --nav-glass-border: rgba(240, 234, 224, 0.09);
+  --border-bright: rgba(154, 121, 54, 0.4);
+  --glow-primary: rgba(154, 121, 54, 0.35);
+  color-scheme: dark;
+
+  --shadow-tint: 0, 0, 0;
+  --glow-primary-rgb: 154, 121, 54;
+  --glow-amber-rgb: 150, 112, 46;
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.42);
+  --shadow-lg: 0 24px 70px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 36px 100px rgba(0, 0, 0, 0.58);
+
+  --status-success-bg: rgba(52, 168, 115, 0.16); --status-success-text: #57D69A;
+  --status-warning-bg: rgba(201, 162, 39, 0.16); --status-warning-text: #E7C766;
+  --status-error-bg:   rgba(227, 90, 59, 0.16);  --status-error-text:   #F08A6F;
+  --status-info-bg:    rgba(63, 110, 168, 0.18); --status-info-text:    #8FB4E3;
+  --status-neutral-bg: rgba(243, 239, 230, 0.08); --status-neutral-text: #A9A79C;
+
+  --input-bg: #1A1816;
+  --input-border: rgba(240, 234, 224, 0.12);
+  --input-border-focus: var(--color-forest);
+  --input-ring: rgba(154, 121, 54, 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Base resets & defaults
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 * {
   box-sizing: border-box;
 }
 
 html {
+  background: var(--color-cream);
   scroll-behavior: smooth;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background: var(--color-cream);
+  color: var(--color-ink);
   font-family: var(--font-sans);
-  font-weight: 400;
-  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-::-webkit-scrollbar {
-  width: 4px;
+/* ── Premium thin scrollbars ──────────────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--glow-primary-rgb), 0.2) transparent;
 }
-::-webkit-scrollbar-track {
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track {
   background: transparent;
 }
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 2px;
-  opacity: 0;
-  transition: opacity 0.2s;
+*::-webkit-scrollbar-thumb {
+  background: rgba(var(--glow-primary-rgb), 0.2);
+  border-radius: 999px;
 }
-:hover::-webkit-scrollbar-thumb {
-  opacity: 1;
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--glow-primary-rgb), 0.35);
 }
 
+/* ── Selection ────────────────────────────────────────────────────────────── */
 ::selection {
-  background: rgba(201, 169, 110, 0.3);
-  color: var(--foreground);
+  background: rgba(var(--glow-primary-rgb), 0.3);
+  color: var(--color-ink);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Focus system — gold accent ring for accessibility
+   ═══════════════════════════════════════════════════════════════════════════ */
+:focus-visible {
+  outline: 2px solid rgba(var(--glow-primary-rgb), 0.6);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Typography utility classes
+   These eliminate the need for inline style={{ fontFamily: ... }}
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Display headings — Fraunces serif */
+.font-display {
+  font-family: var(--font-serif);
+}
+
+/* Body text — Inter sans (default, but explicit class available) */
+.font-body {
+  font-family: var(--font-sans);
+}
+
+/* Data, badges, code — JetBrains Mono */
+.font-data {
+  font-family: var(--font-mono);
+}
+
+/* Eyebrow preset — mono, uppercase, wide tracking, small */
+.text-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: var(--color-ink-subtle);
+}
+
+/* Caption preset — mono, small, tracking */
+.text-caption {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-subtle);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Interactive defaults — smooth transitions everywhere
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+a, button, input, select, textarea {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease,
+              box-shadow 0.2s ease, opacity 0.2s ease, transform 0.15s ease;
+}
+
+/* Minimum touch targets on mobile */
+@media (pointer: coarse) {
+  button, a, [role="button"], [role="tab"], [role="switch"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Animations
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Floating animation for empty states and illustrations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+/* Gold pulse glow for active/live indicators */
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--glow-primary-rgb), 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(var(--glow-primary-rgb), 0); }
+}
+.animate-pulse-gold {
+  animation: pulse-gold 2s ease-in-out infinite;
+}
+
+/* Scroll-triggered reveal (Landing page) */
+.reveal-up {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
+              transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.reveal-up.in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% { background-position: -120% 0; }
+  100% { background-position: 120% 0; }
+}
+.animate-shimmer {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-parchment-dark) 30%,
+    var(--surface-glass-border) 50%,
+    var(--color-parchment-dark) 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* Slide in from right — for master-detail mobile panels */
+@keyframes slide-in-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+/* Fade in up — for content entrance */
+@keyframes fade-in-up {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+/* Shake — for input validation errors */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+/* Spin — for loading spinners */
+@keyframes spin-smooth {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-smooth {
+  animation: spin-smooth 0.8s linear infinite;
+}
+
+/* Route loading progress bar */
+@keyframes progress-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.animate-progress {
+  animation: progress-indeterminate 1.5s ease-in-out infinite;
+}
+
+/* Toast countdown bar */
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+.toast-progress-bar {
+  width: 100%;
+  transform-origin: left;
+  animation-name: toast-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Reduced motion — respect user preference
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

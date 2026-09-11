@@ -1,209 +1,188 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router";
-import { useAuth } from "../AuthContext";
+﻿import { useState } from 'react'
+import { Link, useNavigate } from 'react-router'
+import { useAuth } from '../AuthContext'
+import { PillButton } from '../components/ui/primitives'
+import { Input } from '../components/ui/Input'
+import { Chip } from '../components/ui/Chip'
+import { AppIcon } from '../components/ui/icons'
 
 const DEMO_ACCOUNTS = [
-  { role: "Client", email: "client@morphofit.com" },
-  { role: "Stylist", email: "stylist@morphofit.com" },
-  { role: "Tailor", email: "tailor@morphofit.com" },
-  { role: "Delivery", email: "delivery@morphofit.com" },
-  { role: "Admin", email: "admin@morphofit.com" },
-];
+  { role: 'Client', email: 'client@morphofit.com' },
+  { role: 'Stylist', email: 'stylist@morphofit.com' },
+  { role: 'Tailor', email: 'tailor@morphofit.com' },
+  { role: 'Delivery', email: 'delivery@morphofit.com' },
+  { role: 'Admin', email: 'admin@morphofit.com' },
+]
 
 export default function SignIn() {
-  const { login } = useAuth();
-  const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+    e.preventDefault()
+    setError('')
+    setLoading(true)
     try {
-      await login(email, password);
-      navigate("/dashboard");
+      await login(email, password)
+      navigate('/dashboard')
     } catch (err: any) {
-      setError(err.message || "Sign in failed");
+      setError(err.message || 'Sign in failed')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   };
 
   const fillDemo = (demoEmail: string) => {
-    setEmail(demoEmail);
-    setPassword("password123");
-    setError("");
+    setEmail(demoEmail)
+    setPassword('password123')
+    setError('')
   };
 
   return (
-    <div
-      className="min-h-screen flex"
-      style={{ background: "var(--background)", fontFamily: "var(--font-sans)" }}
-    >
-      {/* Left panel — image */}
-      <div className="hidden lg:block flex-1 relative overflow-hidden">
+    <div className="flex min-h-screen bg-cream font-body text-ink">
+      {/* ── Left panel — Editorial Photography ─────────────────────────── */}
+      <div className="relative hidden flex-1 overflow-hidden lg:block">
         <img
           src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=900&h=1200&fit=crop&auto=format"
-          alt="Fashion atelier"
-          className="w-full h-full"
-          style={{ objectFit: "cover", filter: "brightness(0.35) sepia(0.2)" }}
+          alt="Haute couture tailoring"
+          className="h-full w-full object-cover saturate-90"
         />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to right, transparent 60%, var(--background))" }} />
-        <div className="absolute bottom-16 left-12">
-          <div style={{ fontFamily: "var(--font-serif)", fontSize: "2.5rem", fontWeight: 400, color: "var(--foreground)", lineHeight: 1.1, maxWidth: "360px" }}>
-            Your body.
-            <br />
-            <em style={{ fontStyle: "italic", color: "var(--primary)" }}>Your blueprint.</em>
-            <br />
-            Your garment.
-          </div>
-          <div style={{ fontFamily: "var(--font-mono-face)", fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--muted-foreground)", marginTop: "1rem" }}>
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(to right, rgba(10,9,8,0.2) 0%, transparent 40%, var(--color-cream) 98%)',
+          }}
+        />
+        <div className="absolute bottom-16 left-12 right-12">
+          <h2 className="max-w-md text-4xl font-bold font-display text-white leading-tight drop-shadow-md">
+            Your body.<br />
+            <em className="italic text-forest-light">Your blueprint.</em><br />
+            Your bespoke garment.
+          </h2>
+          <p className="mt-4 text-xs font-data uppercase tracking-[0.3em] text-white/80">
             MorphoFit Atelier
-          </div>
+          </p>
         </div>
       </div>
 
-      {/* Right panel — form */}
-      <div className="flex-1 flex flex-col items-center justify-center px-8 py-16 max-w-lg mx-auto w-full lg:max-w-none">
-        <div className="w-full max-w-sm">
-          <Link
-            to="/"
-            style={{ fontFamily: "var(--font-serif)", fontSize: "1.3rem", color: "var(--primary)", letterSpacing: "0.04em", textDecoration: "none", display: "block", marginBottom: "3rem" }}
-          >
-            MorphoFit
+      {/* ── Right panel — Sign In Form ──────────────────────────────────── */}
+      <div className="mx-auto flex w-full flex-1 flex-col items-center justify-center px-6 py-12 sm:px-10 lg:max-w-xl">
+        <div className="w-full max-w-sm sm:max-w-md">
+          {/* Logo */}
+          <Link to="/" className="mb-8 inline-flex items-center gap-3 group">
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-2xl shadow-md ring-2 ring-forest/20 group-hover:scale-105 transition-transform"
+              style={{ background: 'var(--gradient-primary)' }}
+            >
+              <span className="text-xl font-bold font-display text-white">M</span>
+            </div>
+            <span className="text-xl font-bold font-display text-ink tracking-tight">
+              MorphoFit
+            </span>
           </Link>
 
-          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", fontWeight: 400, marginBottom: "0.5rem" }}>
+          <h1 className="text-3xl font-bold font-display text-ink tracking-tight">
             Welcome back
           </h1>
-          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginBottom: "2.5rem" }}>
-            Sign in to your atelier account.
+          <p className="mt-1.5 mb-8 text-sm font-body text-ink-muted">
+            Sign in to access your bespoke atelier workspace.
           </p>
 
-          {/* Demo shortcuts */}
-          <div style={{ marginBottom: "2rem", padding: "1rem", border: "1px solid var(--border)", background: "var(--card)", borderRadius: "2px" }}>
-            <div style={{ fontFamily: "var(--font-mono-face)", fontSize: "0.55rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
-              Demo Accounts (password: password123)
+          {/* Quick Demo Accounts Selection */}
+          <div className="mb-6 rounded-2xl border border-parchment-dark bg-surface p-4 shadow-xs">
+            <div className="mb-2.5 text-[10px] font-data font-semibold uppercase tracking-widest text-ink-subtle">
+              Instant Demo Access
             </div>
             <div className="flex flex-wrap gap-2">
               {DEMO_ACCOUNTS.map((d) => (
-                <button
+                <Chip
                   key={d.email}
+                  selected={email === d.email}
                   onClick={() => fillDemo(d.email)}
-                  style={{
-                    padding: "0.25rem 0.6rem",
-                    border: "1px solid var(--border)",
-                    background: email === d.email ? "var(--primary)" : "transparent",
-                    color: email === d.email ? "var(--primary-foreground)" : "var(--muted-foreground)",
-                    borderRadius: "2px",
-                    fontSize: "0.7rem",
-                    fontFamily: "var(--font-mono-face)",
-                    cursor: "pointer",
-                    letterSpacing: "0.06em",
-                    transition: "all 0.15s",
-                  }}
                 >
                   {d.role}
-                </button>
+                </Chip>
               ))}
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div>
-              <label style={{ fontFamily: "var(--font-mono-face)", fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--muted-foreground)", display: "block", marginBottom: "0.5rem" }}>
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="you@example.com"
-                style={{
-                  width: "100%",
-                  padding: "0.75rem 1rem",
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "2px",
-                  color: "var(--foreground)",
-                  fontSize: "0.875rem",
-                  fontFamily: "var(--font-sans)",
-                  outline: "none",
-                  transition: "border-color 0.15s",
-                }}
-                onFocus={(e) => (e.target.style.borderColor = "var(--primary)")}
-                onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
-              />
-            </div>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              label="Email address"
+              type="email"
+              value={email}
+              onChange={setEmail}
+              required
+              autoComplete="email"
+              icon="mail"
+              placeholder="you@atelier.com"
+            />
 
-            <div>
-              <label style={{ fontFamily: "var(--font-mono-face)", fontSize: "0.6rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--muted-foreground)", display: "block", marginBottom: "0.5rem" }}>
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                style={{
-                  width: "100%",
-                  padding: "0.75rem 1rem",
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "2px",
-                  color: "var(--foreground)",
-                  fontSize: "0.875rem",
-                  fontFamily: "var(--font-sans)",
-                  outline: "none",
-                  transition: "border-color 0.15s",
-                }}
-                onFocus={(e) => (e.target.style.borderColor = "var(--primary)")}
-                onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
-              />
+            <Input
+              label="Password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={setPassword}
+              required
+              autoComplete="current-password"
+              icon="shieldCheck"
+              placeholder="••••••••"
+              suffix={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => !p)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="text-ink-subtle hover:text-ink transition-colors p-1"
+                >
+                  <AppIcon name={showPassword ? 'eyeOff' : 'eye'} size={16} />
+                </button>
+              }
+            />
+
+            <div className="flex justify-end -mt-1">
+              <Link
+                to="/forgot-password"
+                className="text-xs font-semibold font-body text-forest hover:underline"
+              >
+                Forgot password?
+              </Link>
             </div>
 
             {error && (
-              <div style={{ padding: "0.75rem 1rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "2px", fontSize: "0.8rem", color: "#f87171" }}>
+              <div className="rounded-xl border border-seal/20 bg-[var(--status-error-bg)] p-3 text-xs font-body text-[var(--status-error-text)] animate-shake">
                 {error}
               </div>
             )}
 
-            <button
+            <PillButton
               type="submit"
-              disabled={loading}
-              style={{
-                padding: "0.875rem",
-                background: loading ? "var(--muted)" : "var(--primary)",
-                color: "var(--primary-foreground)",
-                border: "none",
-                borderRadius: "2px",
-                fontSize: "0.8rem",
-                fontFamily: "var(--font-sans)",
-                fontWeight: 500,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                cursor: loading ? "not-allowed" : "pointer",
-                transition: "opacity 0.2s",
-                marginTop: "0.5rem",
-              }}
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={loading}
             >
-              {loading ? "Signing in…" : "Sign In"}
-            </button>
+              {loading ? 'Signing in…' : 'Sign In'}
+            </PillButton>
           </form>
 
-          <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: "2rem", textAlign: "center" }}>
-            No account?{" "}
-            <Link to="/register" style={{ color: "var(--primary)", textDecoration: "none" }}>
+          <p className="mt-8 text-center text-xs sm:text-sm font-body text-ink-muted">
+            Don't have an atelier account?{' '}
+            <Link
+              to="/register"
+              className="font-semibold text-forest hover:underline"
+            >
               Register here
             </Link>
           </p>
         </div>
       </div>
     </div>
-  );
+  )
 }

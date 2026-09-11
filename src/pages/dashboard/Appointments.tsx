@@ -1,107 +1,305 @@
-import { useEffect, useState } from "react";
-import { api, type Appointment, type AppointmentStatus, type User } from "../../api";
-import { useAuth } from "../../AuthContext";
-
-const STATUS_COLOR: Record<AppointmentStatus, string> = {
-  requested: "#C9A96E",
-  confirmed: "#8B9E8A",
-  declined: "#B47770",
-  completed: "#7D8B9E",
-};
-
-const STATUS_LABEL: Record<AppointmentStatus, string> = {
-  requested: "Awaiting response",
-  confirmed: "Confirmed",
-  declined: "Declined",
-  completed: "Completed",
-};
+﻿import { useEffect, useState, useMemo } from 'react'
+import {
+  api,
+  type Appointment,
+  type AppointmentStatus,
+  type User,
+} from '../../api'
+import { useAuth } from '../../AuthContext'
+import { Card, StatusBadge, PillButton } from '../../components/ui/primitives'
+import { Input } from '../../components/ui/Input'
+import { Select } from '../../components/ui/Select'
+import { PageShell } from '../../components/ui/PageShell'
+import { useToast } from '../../components/ui/Toast'
 
 function formatDate(date: string) {
-  return new Date(`${date}T12:00:00`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
+  return new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
 }
 
-function Status({ status }: { status: AppointmentStatus }) {
-  const color = STATUS_COLOR[status];
-  return <span style={{ padding: "0.25rem 0.55rem", border: `1px solid ${color}55`, color, background: `${color}12`, borderRadius: "2px", fontFamily: "var(--font-mono-face)", fontSize: "0.55rem", letterSpacing: "0.08em", textTransform: "uppercase" }}>{STATUS_LABEL[status]}</span>;
-}
+const TIME_OPTIONS = [
+  { value: '09:00', label: '09:00 AM' },
+  { value: '10:00', label: '10:00 AM' },
+  { value: '11:00', label: '11:00 AM' },
+  { value: '13:00', label: '01:00 PM' },
+  { value: '14:00', label: '02:00 PM' },
+  { value: '15:00', label: '03:00 PM' },
+  { value: '16:00', label: '04:00 PM' },
+]
 
 export default function Appointments() {
-  const { user } = useAuth();
-  const isClient = user?.role === "client";
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [tailors, setTailors] = useState<User[]>([]);
-  const [tailorId, setTailorId] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("10:00");
-  const [notes, setNotes] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
+  const { user } = useAuth()
+  const { show } = useToast()
+  const isClient = user?.role === 'client'
+  const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [tailors, setTailors] = useState<User[]>([])
+  const [tailorId, setTailorId] = useState('')
+  const [date, setDate] = useState('')
+  const [time, setTime] = useState('10:00')
+  const [notes, setNotes] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
-  const loadAppointments = () => api.appointments.list().then(setAppointments).finally(() => setLoading(false));
+  const loadAppointments = () =>
+    api.appointments
+      .list()
+      .then(setAppointments)
+      .finally(() => setLoading(false))
 
   useEffect(() => {
-    if (!user) return;
-    loadAppointments().catch(() => setMessage("Unable to load appointments."));
-    if (isClient) api.appointments.tailors().then((data) => { setTailors(data); if (data[0]) setTailorId(String(data[0].id)); }).catch(() => setMessage("Unable to load tailors."));
-  }, [user, isClient]);
+    if (!user) return
+    loadAppointments().catch(() =>
+      setError('Unable to load fitting appointments.')
+    )
+    if (isClient)
+      api.appointments
+        .tailors()
+        .then((data) => {
+          setTailors(data)
+          if (data[0]) setTailorId(String(data[0].id))
+        })
+        .catch(() => setError('Unable to load tailors roster.'))
+  }, [user, isClient])
+
+  const tailorOptions = useMemo(() => {
+    return tailors.map((t) => ({
+      value: String(t.id),
+      label: `${t.name}${t.city ? ` · ${t.city}` : ''}`,
+      icon: 'scissors' as const,
+    }))
+  }, [tailors])
 
   const submit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!tailorId || !date) return;
-    setSubmitting(true);
-    setMessage("");
+    event.preventDefault()
+    if (!tailorId || !date) {
+      // Previously a bare `return` — the button looked dead when the date
+      // was empty, with no request, message, or hint as to why.
+      setError(
+        !tailorId
+          ? 'Choose an artisan tailor for this fitting.'
+          : 'Pick a fitting date before requesting an appointment.'
+      )
+      return
+    }
+    setSubmitting(true)
+    setError('')
     try {
-      await api.appointments.create(tailorId, date, time, notes);
-      setDate("");
-      setNotes("");
-      setMessage("Appointment request sent.");
-      await loadAppointments();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to book appointment.");
+      await api.appointments.create(tailorId, date, time, notes)
+      setDate('')
+      setNotes('')
+      show({
+        title: 'Fitting request dispatched',
+        description: 'Your chosen artisan tailor will review and confirm.',
+        tone: 'success',
+      })
+      await loadAppointments()
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Unable to book fitting.'
+      )
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
-  const updateStatus = async (appointment: Appointment, status: AppointmentStatus) => {
+  const updateStatus = async (
+    appointment: Appointment,
+    status: AppointmentStatus
+  ) => {
     try {
-      const updated = await api.appointments.updateStatus(appointment.id, status);
-      setAppointments((current) => current.map((item) => item.id === updated.id ? { ...item, ...updated } : item));
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to update appointment.");
+      const updated = await api.appointments.updateStatus(
+        appointment.id,
+        status
+      )
+      setAppointments((current) =>
+        current.map((item) =>
+          item.id === updated.id ? { ...item, ...updated } : item
+        )
+      )
+      show({
+        title:
+          status === 'confirmed'
+            ? 'Fitting confirmed'
+            : 'Fitting declined',
+        tone: status === 'confirmed' ? 'success' : 'neutral',
+      })
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Unable to update appointment.'
+      )
     }
-  };
+  }
 
   return (
-    <div>
-      <div style={{ marginBottom: "2.25rem" }}>
-        <div style={{ fontFamily: "var(--font-mono-face)", fontSize: "0.58rem", letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--primary)", marginBottom: "0.55rem" }}>Atelier calendar</div>
-        <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "2.15rem", fontWeight: 400, marginBottom: "0.35rem" }}>{isClient ? "Book a fitting" : "Fitting appointments"}</h1>
-        <p style={{ color: "var(--muted-foreground)", fontSize: "0.88rem", maxWidth: "540px" }}>{isClient ? "Choose a tailor and a time to discuss your next garment in person." : "Review client requests and keep every fitting on schedule."}</p>
-      </div>
+    <PageShell
+      title={isClient ? 'Book a Fitting' : 'Fitting Appointments'}
+      subtitle="Atelier fitting schedule, in-person consultations & measurements"
+      loading={loading}
+      error={error}
+      onRetry={loadAppointments}
+    >
+      <div className="space-y-8">
+        {/* ── Client Booking Section ───────────────────────────────────── */}
+        {isClient && (
+          <form
+            onSubmit={submit}
+            className="grid grid-cols-1 gap-6 lg:grid-cols-12"
+          >
+            <Card className="p-6 lg:col-span-7 space-y-4">
+              <div className="text-[10px] font-data font-semibold text-ink-subtle uppercase tracking-widest">
+                New Atelier Fitting Request
+              </div>
 
-      {isClient && <form onSubmit={submit} className="grid grid-cols-1 lg:grid-cols-2 gap-6" style={{ marginBottom: "2.5rem" }}>
-        <div style={{ padding: "1.5rem", border: "1px solid var(--border)", background: "var(--card)" }}>
-          <div style={{ fontFamily: "var(--font-mono-face)", fontSize: "0.57rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--muted-foreground)", marginBottom: "1.25rem" }}>New request</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <label style={{ fontSize: "0.78rem", color: "var(--muted-foreground)" }}>Tailor<select value={tailorId} onChange={(event) => setTailorId(event.target.value)} required style={inputStyle}><option value="">Select a tailor</option>{tailors.map((tailor) => <option key={tailor.id} value={tailor.id}>{tailor.name}{tailor.city ? ` · ${tailor.city}` : ""}</option>)}</select></label>
-            <label style={{ fontSize: "0.78rem", color: "var(--muted-foreground)" }}>Date<input type="date" value={date} min={new Date().toISOString().slice(0, 10)} onChange={(event) => setDate(event.target.value)} required style={inputStyle} /></label>
-            <label style={{ fontSize: "0.78rem", color: "var(--muted-foreground)" }}>Time<select value={time} onChange={(event) => setTime(event.target.value)} style={inputStyle}>{["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"].map((slot) => <option key={slot}>{slot}</option>)}</select></label>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Select
+                  label="Artisan Tailor"
+                  value={tailorId}
+                  onChange={setTailorId}
+                  options={tailorOptions}
+                  required
+                />
+                <Input
+                  label="Fitting Date"
+                  type="date"
+                  value={date}
+                  onChange={setDate}
+                  min={new Date().toISOString().slice(0, 10)}
+                  required
+                  icon="calendar"
+                />
+              </div>
+
+              <Select
+                label="Preferred Time Window"
+                value={time}
+                onChange={setTime}
+                options={TIME_OPTIONS}
+              />
+
+              <Input
+                label="Garment vision / Discussion notes"
+                value={notes}
+                onChange={setNotes}
+                multiline
+                rows={3}
+                placeholder="e.g. In-person measurement check for royal micro-velvet evening suit."
+              />
+
+              <div>
+                <PillButton
+                  type="submit"
+                  variant="primary"
+                  loading={submitting}
+                  icon="calendar"
+                >
+                  {submitting ? 'Dispatching…' : 'Request Appointment'}
+                </PillButton>
+              </div>
+            </Card>
+
+            {/* Atmospheric Guide Card */}
+            <Card className="p-6 lg:col-span-5 bg-parchment flex flex-col justify-between">
+              <div>
+                <h3 className="text-xl font-bold font-display text-ink leading-snug">
+                  A fitting is where the garment begins to take human shape.
+                </h3>
+                <p className="mt-3 text-xs font-body text-ink-muted leading-relaxed">
+                  Your master tailor will verify your dual-photo calibrated
+                  measurements, check posture balance, and pin your draft
+                  toiles for an impeccable bespoke drape.
+                </p>
+              </div>
+
+              <div className="mt-6 rounded-2xl border border-parchment-dark bg-surface p-4 shadow-2xs">
+                <span className="block text-[9px] font-data text-ink-subtle uppercase tracking-widest">
+                  Atelier Etiquette
+                </span>
+                <p className="mt-1 text-xs font-body text-ink">
+                  Wear well-fitted base garments for precision pin fittings.
+                </p>
+              </div>
+            </Card>
+          </form>
+        )}
+
+        {/* ── Appointments Schedule List ──────────────────────────────── */}
+        <div className="space-y-3">
+          <div className="text-[10px] font-data font-semibold text-ink-subtle uppercase tracking-widest px-1">
+            {isClient ? 'Your Scheduled Fittings' : 'Incoming Fitting Requests'}
           </div>
-          <label style={{ display: "block", fontSize: "0.78rem", color: "var(--muted-foreground)", marginTop: "1rem" }}>What would you like to discuss?<textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="e.g. First fitting for the linen suit" rows={3} style={{ ...inputStyle, resize: "vertical" }} /></label>
-          <button type="submit" disabled={submitting} style={{ marginTop: "1.25rem", padding: "0.75rem 1rem", border: "none", background: submitting ? "var(--muted)" : "var(--primary)", color: "var(--primary-foreground)", borderRadius: "2px", fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase", cursor: submitting ? "not-allowed" : "pointer" }}>{submitting ? "Sending…" : "Request appointment"}</button>
+
+          {appointments.length === 0 ? (
+            <Card className="p-8 text-center bg-surface">
+              <p className="text-sm font-body text-ink-muted">
+                No fitting appointments scheduled yet.
+              </p>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {appointments.map((appointment) => (
+                <Card
+                  key={appointment.id}
+                  className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between"
+                  hover
+                >
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold font-body text-ink-muted uppercase tracking-wide">
+                      {isClient
+                        ? `Tailor: ${appointment.tailor?.name || 'Artisan'}`
+                        : `Client: ${appointment.client?.name || 'Client'}`}
+                    </div>
+                    <div className="mt-1 text-lg font-bold font-display text-forest">
+                      {formatDate(appointment.date)}{' '}
+                      <span className="text-sm font-normal font-body text-ink-muted">
+                        at {appointment.time}
+                      </span>
+                    </div>
+                    {appointment.notes && (
+                      <p className="mt-1 text-xs font-body text-ink-subtle">
+                        {appointment.notes}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-shrink-0 items-center gap-3">
+                    <StatusBadge status={appointment.status} />
+
+                    {!isClient && appointment.status === 'requested' && (
+                      <div className="flex items-center gap-2">
+                        <PillButton
+                          variant="primary"
+                          size="sm"
+                          onClick={() =>
+                            updateStatus(appointment, 'confirmed')
+                          }
+                        >
+                          Confirm
+                        </PillButton>
+                        <PillButton
+                          variant="secondary"
+                          size="sm"
+                          onClick={() =>
+                            updateStatus(appointment, 'declined')
+                          }
+                        >
+                          Decline
+                        </PillButton>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
-        <div style={{ padding: "1.5rem", background: "var(--secondary)", border: "1px solid var(--border)" }}><div style={{ fontFamily: "var(--font-serif)", fontSize: "1.35rem", lineHeight: 1.25, marginBottom: "1rem" }}>A fitting is where the garment begins to feel like yours.</div><p style={{ fontSize: "0.8rem", lineHeight: 1.7, color: "var(--muted-foreground)" }}>Your tailor will confirm the appointment or suggest another time. Bring any reference pieces, fabric ideas, or notes about how you want the final silhouette to feel.</p></div>
-      </form>}
-
-      {message && <div style={{ padding: "0.75rem 1rem", border: "1px solid var(--border)", color: "var(--primary)", fontSize: "0.8rem", marginBottom: "1.5rem" }}>{message}</div>}
-      <div style={{ fontFamily: "var(--font-mono-face)", fontSize: "0.58rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>{isClient ? "Your appointments" : "Incoming requests"}</div>
-      {loading ? <div style={{ color: "var(--muted-foreground)", padding: "2rem 0" }}>Loading calendar…</div> : appointments.length === 0 ? <div style={{ padding: "3rem 1.5rem", border: "1px solid var(--border)", background: "var(--card)", color: "var(--muted-foreground)", textAlign: "center" }}>No appointments scheduled yet.</div> : <div className="flex flex-col" style={{ border: "1px solid var(--border)", background: "var(--card)" }}>{appointments.map((appointment) => <div key={appointment.id} className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between" style={{ padding: "1.15rem 1.25rem", borderBottom: "1px solid var(--border)" }}><div><div style={{ fontSize: "0.92rem", color: "var(--foreground)", marginBottom: "0.25rem" }}>{isClient ? appointment.tailor?.name || "Tailor" : appointment.client?.name || "Client"}</div><div style={{ color: "var(--primary)", fontFamily: "var(--font-serif)", fontSize: "1.08rem" }}>{formatDate(appointment.date)} <span style={{ color: "var(--muted-foreground)", fontFamily: "var(--font-sans)", fontSize: "0.82rem" }}>at {appointment.time}</span></div>{appointment.notes && <div style={{ color: "var(--muted-foreground)", fontSize: "0.75rem", marginTop: "0.35rem" }}>{appointment.notes}</div>}</div><div className="flex items-center gap-3"><Status status={appointment.status} />{!isClient && appointment.status === "requested" && <><button onClick={() => updateStatus(appointment, "confirmed")} style={actionStyle}>Confirm</button><button onClick={() => updateStatus(appointment, "declined")} style={secondaryActionStyle}>Decline</button></>}</div></div>)}</div>}
-    </div>
-  );
+      </div>
+    </PageShell>
+  )
 }
-
-const inputStyle: React.CSSProperties = { display: "block", width: "100%", marginTop: "0.45rem", padding: "0.7rem 0.75rem", background: "var(--background)", border: "1px solid var(--border)", borderRadius: "2px", color: "var(--foreground)", fontFamily: "var(--font-sans)", fontSize: "0.82rem", outline: "none" };
-const actionStyle: React.CSSProperties = { padding: "0.45rem 0.65rem", border: "1px solid var(--primary)", background: "var(--primary)", color: "var(--primary-foreground)", borderRadius: "2px", fontSize: "0.65rem", cursor: "pointer" };
-const secondaryActionStyle: React.CSSProperties = { ...actionStyle, background: "transparent", color: "var(--muted-foreground)", borderColor: "var(--border)" };

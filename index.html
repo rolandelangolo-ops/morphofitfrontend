@@ -1,16 +1,33 @@
 <!doctype html>
-<html lang="<!-- figma:lang -->">
+<html lang="en">
   <head>
-    <!-- figma:head-start -->
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><!-- figma:title --></title>
-    <!-- figma:head-end -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>MorphoFit</title>
+    <meta name="description" content="Transform your custom clothing experience with precise body scanning, tailored style recommendations, and seamless collaboration with stylists and tailors." />
+    <meta name="robots" content="noindex, nofollow" />
+    <script>
+      // Sets data-theme before first paint so there's no flash of the wrong
+      // palette while React mounts (see src/theme.tsx, which reads/writes
+      // the same 'morphofit-theme' key and prefers-color-scheme fallback).
+      (function () {
+        try {
+          var stored = localStorage.getItem('morphofit-theme');
+          var theme =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
+          document.documentElement.dataset.theme = theme;
+        } catch (e) {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
   </head>
   <body>
-    <!-- figma:body-start -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- figma:body-end -->
   </body>
 </html>
