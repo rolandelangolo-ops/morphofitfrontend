@@ -19,6 +19,21 @@ function normalizeIds<T>(data: T): T {
   return obj as T;
 }
 
+/** Still an `Error` (so every existing `err instanceof Error ? err.message`
+ * keeps working) but carries the HTTP status and the backend's structured
+ * `details`, which callers like the body-scan flow need — e.g. which photos
+ * were rejected and why. */
+export class ApiRequestError extends Error {
+  status: number;
+  details: unknown;
+  constructor(message: string, status: number, details?: unknown) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+    this.details = details;
+  }
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   // FormData (avatar/message-attachment uploads) must NOT get a manual
@@ -40,7 +55,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const contentType = res.headers.get("content-type") || "";
   const body = contentType.includes("application/json") ? await res.json() : null;
-  if (!res.ok) throw new Error(body?.error?.message || `Request failed (${res.status})`);
+  if (!res.ok) throw new ApiRequestError(body?.error?.message || `Request failed (${res.status})`, res.status, body?.error?.details);
   const data = (body?.data ?? body);
   return normalizeIds(data) as T;
 }
@@ -81,11 +96,46 @@ export const api = {
   },
   client: {
     measurements: () => request<Measurements | null>("/client/measurements"),
-    saveMeasurements: (measurements: Measurements) =>
-      request<Measurements>("/client/measurements", {
+    /** `draftId` links the save to an analysed photo/live scan; the server
+     * then takes method, confidence, warnings and the stored photos from that
+     * draft (never from this payload). */
+    saveMeasurements: (measurements: Measurements, draftId?: string) =>
+      request<SavedScan>("/client/measurements", {
         method: "POST",
-        body: JSON.stringify(measurements),
+        body: JSON.stringify({
+          height: measurements.height,
+          shoulder: measurements.shoulder,
+          chest: measurements.chest,
+          waist: measurements.waist,
+          hip: measurements.hip,
+          inseam: measurements.inseam,
+          thigh: measurements.thigh,
+          armLength: measurements.armLength,
+          morphology: measurements.morphology,
+          ...(draftId ? { draftId } : {}),
+        }),
       }),
+    measurementHistory: () => request<SavedScan[]>("/client/measurements/history"),
+    /** Privacy control: removes only the stored images of one scan. */
+    deleteScanPhotos: (scanId: string) =>
+      request<SavedScan>(`/client/measurements/${scanId}/photos`, { method: "DELETE" }),
+    bodyScan: {
+      /** Uploads the four already-compressed JPEGs. Returns a draft that
+       * can be analysed (and re-analysed) without uploading again. */
+      createDraft: (photos: Record<ScanView, Blob>, heightCm: number, method: ScanMethod, signal?: AbortSignal) => {
+        const form = new FormData();
+        form.append("heightCm", String(heightCm));
+        form.append("method", method);
+        for (const view of SCAN_VIEW_IDS) form.append(view, photos[view], `${view}.jpg`);
+        return request<{ draftId: string; photos: ScanPhoto[]; expiresAt: string }>("/client/body-scans/drafts", {
+          method: "POST",
+          body: form,
+          signal,
+        });
+      },
+      analyze: (draftId: string, signal?: AbortSignal) =>
+        request<ScanAnalysis>(`/client/body-scans/drafts/${draftId}/analyze`, { method: "POST", signal }),
+    },
     orders: () => request<Order[]>("/client/orders"),
     createOrder: (orderPayload: Partial<Order>) =>
       request<Order>("/client/orders", {
@@ -361,6 +411,10 @@ export interface ChatMessage {
   createdAt: string;
 }
 
+export type ScanView = "front" | "back" | "left" | "right";
+export type ScanMethod = "photo" | "live";
+export const SCAN_VIEW_IDS: ScanView[] = ["front", "back", "left", "right"];
+
 export interface Measurements {
   shoulder: number;
   chest: number;
@@ -372,6 +426,37 @@ export interface Measurements {
   height: number;
   morphology: string;
   scannedAt: string;
+  /** Present only on scans made with the photo / live AI scan. Scans saved
+   * before it existed lack these and are "earlier height-based estimates". */
+  method?: ScanMethod;
+  confidence?: number;
+  warnings?: string[];
+}
+
+export interface ScanPhoto {
+  view: ScanView;
+  /** Owner-only, authenticated route — display through <AuthImage>. */
+  url: string;
+}
+
+/** A saved scan as listed in history: the same measurements every consumer
+ * already reads, plus its id and (if the user kept them) its private photos. */
+export interface SavedScan extends Measurements {
+  id: string;
+  photos: ScanPhoto[];
+}
+
+/** Result of analysing a draft — identical whichever method produced it. */
+export interface ScanAnalysis {
+  draftId: string;
+  method: ScanMethod;
+  photos: ScanPhoto[];
+  measurements: Pick<Measurements, "height" | "shoulder" | "chest" | "waist" | "hip" | "inseam" | "thigh" | "armLength">;
+  confidences: Record<string, number>;
+  morphology: string;
+  overallConfidence: number;
+  warnings: string[];
+  model: string;
 }
 
 export interface Order {

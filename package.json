@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.1",
     "@types/three": "^0.185.4",
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.30.0",

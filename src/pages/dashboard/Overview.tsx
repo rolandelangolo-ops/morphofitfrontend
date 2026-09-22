@@ -2,6 +2,7 @@
 import { Link, useNavigate } from 'react-router'
 import { useAuth } from '../../AuthContext'
 import { api, type Order, type Measurements, type User } from '../../api'
+import { useLiveReload } from '../../useLiveReload'
 import { Card, StatusBadge, PillButton } from '../../components/ui/primitives'
 import { SkeletonCard } from '../../components/ui/Skeleton'
 import { EmptyState } from '../../components/ui/EmptyState'
@@ -89,10 +90,12 @@ export default function Overview() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (silent = false) => {
     if (!user) return
-    setLoading(true)
-    setError(null)
+    if (!silent) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       // Note: no per-call .catch() here — a genuine failure (expired
       // session, network error) should reach the try/catch below and show
@@ -120,7 +123,7 @@ export default function Overview() {
         setUsers(u)
       }
     } catch (err: any) {
-      setError(err?.message || 'Failed to synchronize atelier dashboard')
+      if (!silent) setError(err?.message || 'Failed to synchronize atelier dashboard')
     } finally {
       setLoading(false)
     }
@@ -129,6 +132,11 @@ export default function Overview() {
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  // Order and appointment activity from other people changes these numbers.
+  useLiveReload(['order_status_changed', 'appointment_requested', 'appointment_confirmed', 'appointment_declined'], () => {
+    fetchData(true)
+  })
 
   if (!user) return null
   const { timeGreeting, firstName } = getGreeting(user.name)
@@ -162,7 +170,7 @@ export default function Overview() {
           <span className="text-xs text-[var(--status-error-text)] font-body">
             {error}
           </span>
-          <PillButton variant="secondary" size="sm" onClick={fetchData}>
+          <PillButton variant="secondary" size="sm" onClick={() => fetchData()}>
             Retry
           </PillButton>
         </Card>

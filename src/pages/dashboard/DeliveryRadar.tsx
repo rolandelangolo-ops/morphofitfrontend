@@ -5,6 +5,7 @@ import { Card, StatusBadge, PillButton } from '../../components/ui/primitives'
 import { AppIcon } from '../../components/ui/icons'
 import { PageShell } from '../../components/ui/PageShell'
 import { useToast } from '../../components/ui/Toast'
+import { useLiveReload } from '../../useLiveReload'
 
 interface DeliveryDispatchItem {
   id: string
@@ -61,7 +62,7 @@ export default function DeliveryRadar() {
     status,
   })
 
-  const fetchRadar = async () => {
+  const fetchRadar = async (silent = false) => {
     try {
       const orders = await api.delivery.orders()
       const inProgress = orders.find(
@@ -75,8 +76,11 @@ export default function DeliveryRadar() {
         orders.filter((o) => o.status === 'delivered' && new Date(o.updatedAt).toDateString() === todayKey).length
       )
     } catch {
-      setRadarList([])
-      setActiveDispatch(null)
+      // A failed background refresh must not wipe a list the courier is looking at.
+      if (!silent) {
+        setRadarList([])
+        setActiveDispatch(null)
+      }
     } finally {
       setLoading(false)
     }
@@ -89,6 +93,11 @@ export default function DeliveryRadar() {
       setLoading(false)
     }
   }, [user])
+
+  // A tailor marking an order ready notifies every courier; refresh the radar the moment it happens.
+  useLiveReload(['order_status_changed'], () => {
+    if (user?.role === 'delivery_agent') fetchRadar(true)
+  })
 
   const handleAcceptDelivery = async (item: DeliveryDispatchItem) => {
     try {

@@ -90,7 +90,7 @@ const MORPHOLOGY_TYPES = [
 ];
 
 const HOW_IT_WORKS_STEPS: { number: string; title: string; description: string; icon: IconName }[] = [
-  { number: "01", title: "Body Scan", description: "Upload two photos — front and side. Our system extracts precise measurements without a tape measure or tailor visit.", icon: "camera" },
+  { number: "01", title: "Body Scan", description: "Take four guided photos or use the live camera scan. AI estimates your measurements from them, so you can start without a tape measure. Every value is yours to review and correct.", icon: "camera" },
   { number: "02", title: "Morphology Match", description: "Your measurements are classified into one of five morphology types. Each type unlocks curated style directions suited to your silhouette.", icon: "sparkles" },
   { number: "03", title: "3D Visualisation", description: "Browse recommended styles rendered on a 3D model calibrated to your measurements — see the garment before it exists.", icon: "layers" },
   { number: "04", title: "Stylist Session", description: "Your measurements and chosen direction go to a real stylist who refines the design, fabric, and detail choices with you.", icon: "message" },

@@ -4,6 +4,10 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 
 // Vite config — https://vitejs.dev/config/
+// Backend the dev server proxies /api, /uploads and /socket.io to. Override with
+// API_PROXY_TARGET when port 3001 is taken by something else on this machine.
+const apiTarget = process.env.API_PROXY_TARGET || 'http://127.0.0.1:3001'
+
 export default defineConfig(({ mode }) => {
   const emitSourcemaps = mode === 'development'
 
@@ -19,6 +23,12 @@ export default defineConfig(({ mode }) => {
       errorOverlayReplay(),
       reactRefreshBoundaryFallback(),
     ],
+    // Only loaded (dynamically) when someone opens the Live Body Scan; listing
+    // it here pre-bundles it once at startup instead of on first use, which
+    // would otherwise force a mid-session full-page reload in dev.
+    optimizeDeps: {
+      include: ['@mediapipe/tasks-vision'],
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
@@ -30,11 +40,11 @@ export default defineConfig(({ mode }) => {
       strictPort: false,
       proxy: {
         '/api': {
-          target: 'http://localhost:3001',
+          target: apiTarget,
           changeOrigin: true,
         },
         '/uploads': {
-          target: 'http://localhost:3001',
+          target: apiTarget,
           changeOrigin: true,
         },
         // Socket.IO (src/socket.ts) connects same-origin so it works from
@@ -42,7 +52,7 @@ export default defineConfig(({ mode }) => {
         // /api proxy above — ws: true upgrades the handshake instead of
         // treating it as a plain HTTP proxy target.
         '/socket.io': {
-          target: 'http://localhost:3001',
+          target: apiTarget,
           changeOrigin: true,
           ws: true,
         },

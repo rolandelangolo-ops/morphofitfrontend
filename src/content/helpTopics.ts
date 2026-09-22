@@ -64,14 +64,21 @@ export const FAQS: FaqTopic[] = [
     category: "measurements",
     question: "How accurate is the body scan?",
     answer:
-      "The Body Scan feature estimates your measurements (chest, waist, hip, inseam, and more) from guided photos. For a made-to-measure garment, we recommend double-checking key measurements with a tailor at your first fitting.",
+      "Body Scan gives AI estimates of your measurements (chest, waist, hip, inseam, and more) from four photos: front, back, left side and right side. Estimates are closest for height and body proportions and least certain for girths like waist, hip and thigh, and loose clothing lowers accuracy. Every value can be edited before you save, and for a made-to-measure garment we recommend verifying key measurements with a tailor.",
   },
   {
     id: "measurements-update",
     category: "measurements",
     question: "How do I update my measurements?",
     answer:
-      "Open Body Scan from the dashboard and re-run the scan at any time — your latest measurements are what tailors see when they prepare a quote for you.",
+      "Open Body Scan from the dashboard and choose Photo Body Scan (four photos from your camera or device) or Live Body Scan (your camera guides you and captures each angle). Nothing changes until you review the result and press Save scan. Your latest saved scan is what tailors see when they prepare a quote, and earlier scans stay in your history so you can compare them.",
+  },
+  {
+    id: "measurements-photos-privacy",
+    category: "measurements",
+    question: "Who can see my body scan photos, and can I delete them?",
+    answer:
+      "Only you. Your four photos are sent to Google's Gemini AI to produce the estimate and are stored privately on Morphofit's servers; stylists, tailors and other users cannot open them. You can delete the photos of any saved scan from Body Scan > History, and its measurements are kept. Live scan guidance runs on your device, and nothing is uploaded until you confirm your four photos.",
   },
   {
     id: "visualizer-use",

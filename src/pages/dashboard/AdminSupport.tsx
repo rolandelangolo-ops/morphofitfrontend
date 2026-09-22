@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { api, type AdminSupportRequest, type SupportRequestPriority, type SupportRequestStatus, type SupportRequestType } from '../../api'
+import { useLiveReload } from '../../useLiveReload'
 import { Card, PillButton, StatusBadge } from '../../components/ui/primitives'
 import { ChipGroup } from '../../components/ui/Chip'
 import { Input } from '../../components/ui/Input'
@@ -47,26 +48,34 @@ export default function AdminSupport() {
   const [reply, setReply] = useState('')
   const [updating, setUpdating] = useState(false)
 
-  const load = () => {
-    setLoading(true)
-    setError(null)
+  const load = (silent = false) => {
+    if (!silent) {
+      setLoading(true)
+      setError(null)
+    }
     api.admin.support
       .list()
       .then((items) => {
         setRequests(items)
         const wantedId = searchParams.get('requestId')
         setSelected((prev) => {
-          const wanted = wantedId || prev?.id
+          // A silent refresh keeps whichever request the admin has open
+          // instead of snapping back to the one named in the URL.
+          const wanted = silent ? prev?.id || wantedId : wantedId || prev?.id
           if (!wanted) return prev
           return items.find((r) => r.id === wanted) || prev
         })
       })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load support requests'))
+      .catch((err) => {
+        if (!silent) setError(err instanceof Error ? err.message : 'Failed to load support requests')
+      })
       .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }
 
-  useEffect(load, [])
+  useEffect(() => load(), [])
+  // New requests and user replies land while an admin has the queue open.
+  useLiveReload(['support_request_created', 'support_reply_received'], () => load(true))
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -131,7 +140,7 @@ export default function AdminSupport() {
       subtitle="Bug reports, feedback, and questions submitted across the app"
       loading={loading}
       error={error}
-      onRetry={load}
+      onRetry={() => load()}
     >
       <MasterDetail
         hasSelection={!!selected}

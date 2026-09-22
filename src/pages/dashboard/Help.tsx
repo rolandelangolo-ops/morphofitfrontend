@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useAuth } from '../../AuthContext'
 import { api, type SupportRequest, type SupportRequestType } from '../../api'
+import { useLiveReload } from '../../useLiveReload'
 import { Card, PillButton, StatusBadge } from '../../components/ui/primitives'
 import { Input } from '../../components/ui/Input'
 import { ChipGroup } from '../../components/ui/Chip'
@@ -102,9 +103,11 @@ function RequestsTab({ initialRequestId }: { initialRequestId: string | null }) 
   const [reply, setReply] = useState('')
   const [sending, setSending] = useState(false)
 
-  const load = () => {
-    setLoading(true)
-    setError(null)
+  const load = (silent = false) => {
+    if (!silent) {
+      setLoading(true)
+      setError(null)
+    }
     api.support
       .mine()
       .then((items) => {
@@ -115,12 +118,16 @@ function RequestsTab({ initialRequestId }: { initialRequestId: string | null }) 
           return items.find((r) => r.id === wantedId) || prev
         })
       })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load your requests'))
+      .catch((err) => {
+        if (!silent) setError(err instanceof Error ? err.message : 'Failed to load your requests')
+      })
       .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }
 
-  useEffect(load, [])
+  useEffect(() => load(), [])
+  // Admin replies and status changes arrive while the request is open.
+  useLiveReload(['support_response_added', 'support_status_changed'], () => load(true))
 
   const sendReply = async () => {
     if (!selected || !reply.trim()) return
@@ -154,7 +161,7 @@ function RequestsTab({ initialRequestId }: { initialRequestId: string | null }) 
         description={error}
         tone="error"
         action={
-          <PillButton variant="secondary" onClick={load}>
+          <PillButton variant="secondary" onClick={() => load()}>
             Try again
           </PillButton>
         }

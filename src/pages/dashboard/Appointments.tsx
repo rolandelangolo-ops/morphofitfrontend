@@ -5,6 +5,7 @@ import {
   type AppointmentStatus,
   type User,
 } from '../../api'
+import { useLiveReload } from '../../useLiveReload'
 import { useAuth } from '../../AuthContext'
 import { Card, StatusBadge, PillButton } from '../../components/ui/primitives'
 import { Input } from '../../components/ui/Input'
@@ -65,6 +66,11 @@ export default function Appointments() {
         })
         .catch(() => setError('Unable to load tailors roster.'))
   }, [user, isClient])
+
+  // Requests, confirmations and declines come from the other party at any time.
+  useLiveReload(['appointment_requested', 'appointment_confirmed', 'appointment_declined'], () => {
+    if (user) loadAppointments().catch(() => {})
+  })
 
   const tailorOptions = useMemo(() => {
     return tailors.map((t) => ({
