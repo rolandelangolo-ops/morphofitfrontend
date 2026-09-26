@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router'
 import { useAuth } from '../../AuthContext'
 import { useNotifications } from '../../NotificationsContext'
 import { AppIcon } from '../ui/icons'
+import { BrandLogo } from '../ui/BrandLogo'
 import { ConfirmDialog } from '../ui/Modal'
 import { NAV_BY_ROLE, ROLE_LABEL } from './nav'
 
@@ -23,12 +24,7 @@ export function Sidebar() {
     <aside className="hidden w-72 flex-shrink-0 flex-col overflow-hidden border-r border-parchment-dark bg-surface-glass-bg backdrop-blur-xl lg:flex">
       {/* ── Brand Workspace Header ──────────────────────────────────────── */}
       <div className="flex items-center gap-3.5 px-6 pt-7">
-        <div
-          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl shadow-md ring-2 ring-forest/20"
-          style={{ background: 'var(--gradient-primary)' }}
-        >
-          <span className="text-xl font-bold font-display text-white">M</span>
-        </div>
+        <BrandLogo variant="mark" className="h-11 w-11 flex-shrink-0" />
         <div className="min-w-0">
           <div className="truncate text-lg font-bold font-display text-ink tracking-tight">
             MorphoFit

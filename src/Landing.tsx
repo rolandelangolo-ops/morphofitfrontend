@@ -4,6 +4,7 @@ import { useAuth } from "./AuthContext";
 import { AppIcon, type IconName } from "./components/ui/icons";
 import { Card } from "./components/ui/primitives";
 import { Chip } from "./components/ui/Chip";
+import { BrandLogo } from "./components/ui/BrandLogo";
 import MannequinViewer3D, { type MorphologyShape } from "./components/visualizer/MannequinViewer3D";
 
 const NAV_LINKS = [
@@ -162,10 +163,7 @@ export default function Landing() {
       {/* NAV */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between border-b border-parchment-dark/70 bg-surface/85 px-6 py-4 backdrop-blur-xl lg:px-8">
         <Link to="/" className="flex items-center gap-2.5 no-underline">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-forest text-white shadow-xs">
-            <span className="font-display text-sm font-bold">M</span>
-          </div>
-          <span className="font-display text-lg font-semibold text-ink">MorphoFit</span>
+          <BrandLogo variant="full" className="h-8 w-auto" />
           <span className="mt-0.5 font-data text-[10px] uppercase tracking-[0.2em] text-ink-subtle">Atelier</span>
         </Link>
 
@@ -566,7 +564,7 @@ export default function Landing() {
       <footer className="border-t border-parchment-dark bg-parchment px-6 py-14 lg:px-8">
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 md:grid-cols-4">
           <div className="col-span-2 md:col-span-1">
-            <div className="mb-1 font-display text-lg font-semibold text-ink">MorphoFit</div>
+            <BrandLogo variant="full" className="mb-2 h-7 w-auto" />
             <div className="mb-3 font-data text-[10px] uppercase tracking-[0.15em] text-ink-subtle">Precision Tailoring Platform</div>
             <p className="max-w-[200px] font-body text-xs leading-relaxed text-ink-muted">Custom clothing, measured from your body, made by real hands.</p>
           </div>

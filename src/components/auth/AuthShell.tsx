@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
+import { BrandLogo } from '../ui/BrandLogo'
 
 /** Split-panel chrome shared by the email-driven auth screens (forgot
  * password, reset password, verify email) so they read as part of the same
@@ -45,14 +46,11 @@ export function AuthShell({
 
       <div className="mx-auto flex w-full flex-1 flex-col items-center justify-center px-6 py-12 sm:px-10 lg:max-w-xl">
         <div className="w-full max-w-sm sm:max-w-md">
-          <Link to="/" className="mb-8 inline-flex items-center gap-3 group">
-            <div
-              className="flex h-10 w-10 items-center justify-center rounded-2xl shadow-md ring-2 ring-forest/20 transition-transform group-hover:scale-105"
-              style={{ background: 'var(--gradient-primary)' }}
-            >
-              <span className="text-xl font-bold font-display text-white">M</span>
-            </div>
-            <span className="text-xl font-bold font-display text-ink tracking-tight">MorphoFit</span>
+          <Link to="/" className="mb-8 inline-flex items-center group">
+            <BrandLogo
+              variant="full"
+              className="h-10 w-auto transition-transform group-hover:scale-105"
+            />
           </Link>
 
           <h1 className="text-3xl font-bold font-display text-ink tracking-tight">{title}</h1>
